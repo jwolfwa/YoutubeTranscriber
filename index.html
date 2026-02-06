@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jazz Transcriber</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .active-btn { background-color: #10b981 !important; } /* Emerald-500 */
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen p-4 pb-20">
+
+    <div class="max-w-4xl mx-auto space-y-6">
+        <header class="text-center">
+            <h1 class="text-3xl font-bold text-emerald-400">Jazz Transcriber</h1>
+            <p class="text-slate-400 text-sm">Slow down and loop YouTube solos</p>
+        </header>
+
+        <div class="aspect-video w-full bg-black rounded-xl overflow-hidden shadow-2xl border border-slate-700">
+            <div id="player"></div>
+        </div>
+
+        <div class="flex gap-2">
+            <input type="text" id="videoUrl" placeholder="Paste YouTube Link..." 
+                class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            <button onclick="loadVideo()" class="bg-emerald-600 hover:bg-emerald-500 px-6 py-2 rounded-lg font-bold transition">Load</button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            
+            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-4">
+                <h2 class="text-lg font-semibold border-b border-slate-700 pb-2">Looping</h2>
+                <div class="flex justify-between items-center gap-2">
+                    <button onclick="setStart()" class="flex-1 bg-slate-700 hover:bg-slate-600 p-4 rounded-lg flex flex-col items-center">
+                        <span class="text-xs uppercase text-slate-400">Set A</span>
+                        <span id="startDisplay" class="text-xl font-mono">0:00</span>
+                    </button>
+                    <button onclick="setEnd()" class="flex-1 bg-slate-700 hover:bg-slate-600 p-4 rounded-lg flex flex-col items-center">
+                        <span class="text-xs uppercase text-slate-400">Set B</span>
+                        <span id="endDisplay" class="text-xl font-mono">0:00</span>
+                    </button>
+                </div>
+                <button id="loopToggle" onclick="toggleLoop()" 
+                    class="w-full py-4 rounded-lg font-bold border-2 border-emerald-500 text-emerald-500 transition">
+                    ENABLE LOOP
+                </button>
+            </div>
+
+            <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-4">
+                <h2 class="text-lg font-semibold border-b border-slate-700 pb-2">Playback Speed</h2>
+                <div class="grid grid-cols-3 gap-2">
+                    <button onclick="setSpeed(0.25)" class="speed-btn bg-slate-700 p-3 rounded-lg hover:bg-slate-600">0.25x</button>
+                    <button onclick="setSpeed(0.5)" class="speed-btn bg-slate-700 p-3 rounded-lg hover:bg-slate-600">0.5x</button>
+                    <button onclick="setSpeed(0.75)" class="speed-btn bg-slate-700 p-3 rounded-lg hover:bg-slate-600">0.75x</button>
+                    <button onclick="setSpeed(1)" class="speed-btn bg-emerald-600 p-3 rounded-lg font-bold">Normal</button>
+                    <button onclick="setSpeed(1.25)" class="speed-btn bg-slate-700 p-3 rounded-lg hover:bg-slate-600">1.25x</button>
+                    <button onclick="setSpeed(1.5)" class="speed-btn bg-slate-700 p-3 rounded-lg hover:bg-slate-600">1.5x</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script src="script.js"></script>
+</body>
+</html>
