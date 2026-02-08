@@ -6,9 +6,13 @@ let loopInterval;
 // Unlimited breakpoints storage
 let breakpoints = [];
 let bpIdCounter = 1;
+// Current video ID and metadata
+let currentVideoId = '';
+let savedVideos = {}; // { videoId: { title, breakpoints } }
 
 // Initialize YouTube Player
 function onYouTubeIframeAPIReady() {
+    loadSavedVideosFromCookies();
     player = new YT.Player('player', {
         height: '100%',
         width: '100%',
@@ -19,7 +23,8 @@ function onYouTubeIframeAPIReady() {
             'rel': 0
         },
         events: {
-            'onReady': onPlayerReady
+            'onReady': onPlayerReady,
+            'onStateChange': onPlayerStateChange
         }
     });
 }
@@ -29,12 +34,57 @@ function onPlayerReady(event) {
     renderBreakpoints();
 }
 
+function onPlayerStateChange(event) {
+    // When video starts playing (state 1), fetch and cache its title
+    if (event.data === YT.PlayerState.PLAYING) {
+        const videoData = player.getVideoData();
+        if (videoData && videoData.video_id) {
+            const videoId = videoData.video_id;
+            if (!savedVideos[videoId]) {
+                // Fetch video title from the API
+                const title = player.getVideoTitle ? player.getVideoTitle() : 'Untitled';
+                savedVideos[videoId] = { title: title || 'Untitled', breakpoints: [] };
+                saveSavedVideosToCookies();
+                updateVideoDropdown();
+            }
+        }
+    }
+}
+
 function loadVideo() {
     const url = document.getElementById('videoUrl').value;
     const videoId = extractVideoId(url);
     if (videoId) {
+        currentVideoId = videoId;
         player.loadVideoById(videoId);
         resetMarkers();
+        // Fetch title and cache this video
+        setTimeout(() => {
+            const title = player.getVideoTitle ? player.getVideoTitle() : 'Untitled';
+            if (!savedVideos[videoId]) {
+                savedVideos[videoId] = { title: title || 'Untitled', breakpoints: [] };
+            } else {
+                savedVideos[videoId].title = title || savedVideos[videoId].title;
+            }
+            saveSavedVideosToCookies();
+            updateVideoDropdown();
+        }, 500);
+    }
+}
+
+function loadSavedVideo() {
+    const select = document.getElementById('videoSelect');
+    const videoId = select.value;
+    if (videoId && savedVideos[videoId]) {
+        currentVideoId = videoId;
+        player.loadVideoById(videoId);
+        document.getElementById('videoUrl').value = 'https://www.youtube.com/watch?v=' + videoId;
+        resetMarkers();
+        // Load saved breakpoints
+        const saved = savedVideos[videoId];
+        breakpoints = saved.breakpoints.map(bp => ({ ...bp })); // Deep copy
+        bpIdCounter = Math.max(...breakpoints.map(bp => parseInt(bp.id.split('_')[1]) || 0)) + 1;
+        renderBreakpoints();
     }
 }
 
@@ -49,7 +99,60 @@ function addBreakpoint() {
     const time = (player && player.getCurrentTime) ? player.getCurrentTime() : 0;
     const id = 'bp_' + bpIdCounter++;
     breakpoints.push({ id, name: `BP ${bpIdCounter-1}`, time });
+    saveCurrentVideoData();
     renderBreakpoints();
+}
+
+function saveCurrentVideoData() {
+    if (currentVideoId && savedVideos[currentVideoId]) {
+        savedVideos[currentVideoId].breakpoints = breakpoints;
+        saveSavedVideosToCookies();
+    }
+}
+
+function loadSavedVideosFromCookies() {
+    const cookie = document.cookie.split(';').find(c => c.trim().startsWith('savedVideos='));
+    if (cookie) {
+        try {
+            const encoded = cookie.split('=')[1];
+            savedVideos = JSON.parse(decodeURIComponent(encoded));
+        } catch (e) {
+            console.error('Error parsing saved videos cookie:', e);
+            savedVideos = {};
+        }
+    }
+    updateVideoDropdown();
+}
+
+function saveSavedVideosToCookies() {
+    const encoded = encodeURIComponent(JSON.stringify(savedVideos));
+    const expiresDate = new Date();
+    expiresDate.setFullYear(expiresDate.getFullYear() + 1);
+    document.cookie = `savedVideos=${encoded}; expires=${expiresDate.toUTCString()}; path=/`;
+}
+
+function updateVideoDropdown() {
+    const select = document.getElementById('videoSelect');
+    const dropdown = document.getElementById('savedVideosDropdown');
+    const ids = Object.keys(savedVideos);
+    
+    if (ids.length === 0) {
+        dropdown.style.display = 'none';
+        return;
+    }
+    
+    dropdown.style.display = 'block';
+    const currentValue = select.value;
+    select.innerHTML = '<option value="">-- Saved Videos --</option>';
+    
+    ids.forEach(videoId => {
+        const option = document.createElement('option');
+        option.value = videoId;
+        option.innerText = savedVideos[videoId].title || videoId;
+        select.appendChild(option);
+    });
+    
+    select.value = currentValue;
 }
 
 function renderBreakpoints() {
@@ -102,6 +205,7 @@ function setBreakpointTime(id) {
     const bp = breakpoints.find(b => b.id === id);
     if (!bp) return;
     bp.time = (player && player.getCurrentTime) ? player.getCurrentTime() : 0;
+    saveCurrentVideoData();
     renderBreakpoints();
 }
 
@@ -113,6 +217,7 @@ function jumpToBreakpoint(id) {
 
 function deleteBreakpoint(id) {
     breakpoints = breakpoints.filter(b => b.id !== id);
+    saveCurrentVideoData();
     renderBreakpoints();
 }
 
@@ -122,6 +227,7 @@ function renameBreakpoint(id) {
     const newName = prompt('Rename breakpoint', bp.name);
     if (newName === null) return;
     bp.name = newName.trim() || bp.name;
+    saveCurrentVideoData();
     renderBreakpoints();
 }
 
