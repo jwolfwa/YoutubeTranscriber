@@ -46,12 +46,9 @@ function extractVideoId(url) {
 
 // --- Breakpoints functions ---
 function addBreakpoint() {
-    const nameEl = document.getElementById('newBpName');
-    const name = nameEl ? nameEl.value.trim() : '';
     const time = (player && player.getCurrentTime) ? player.getCurrentTime() : 0;
     const id = 'bp_' + bpIdCounter++;
-    breakpoints.push({ id, name: name || `BP ${bpIdCounter-1}`, time });
-    if (nameEl) nameEl.value = '';
+    breakpoints.push({ id, name: `BP ${bpIdCounter-1}`, time });
     renderBreakpoints();
 }
 
