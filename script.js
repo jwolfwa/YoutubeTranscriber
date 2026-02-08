@@ -55,10 +55,10 @@ function togglePlayPause() {
     const btn = document.getElementById('playPauseBtn');
     if (player.getPlayerState() === 1) { // Playing
         player.pauseVideo();
-        btn.innerText = '⏸';
+        btn.innerText = '▶';
     } else {
         player.playVideo();
-        btn.innerText = '▶';
+        btn.innerText = '⏸';
     }
 }
 
