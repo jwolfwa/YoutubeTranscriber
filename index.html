@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Youtube Transcriber</title>
+    <title>Jazz Transcriber</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .active-btn { background-color: #10b981 !important; } /* Emerald-500 */
@@ -13,7 +13,8 @@
 
     <div class="max-w-4xl mx-auto space-y-6">
         <header class="text-center">
-            <h1 class="text-3xl font-bold text-emerald-400">Youtube Transcriber</h1>
+            <h1 class="text-3xl font-bold text-emerald-400">Jazz Transcriber</h1>
+            <p class="text-slate-400 text-sm">Slow down and loop YouTube solos</p>
         </header>
 
         <div class="aspect-video w-full bg-black rounded-xl overflow-hidden shadow-2xl border border-slate-700">
@@ -22,8 +23,7 @@
 
         <div class="flex gap-2">
             <input type="text" id="videoUrl" placeholder="Paste YouTube Link..." 
-                class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                onkeypress="if(event.key==='Enter') loadVideo()">
+                class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500">
             <button onclick="loadVideo()" class="bg-emerald-600 hover:bg-slate-600 px-6 py-2 rounded-lg font-bold transition">Load</button>
         </div>
 
@@ -76,14 +76,6 @@
                 </div>
             </div>
 
-        </div>
-    </div>
-
-    <div class="max-w-4xl mx-auto mt-8 pt-6 border-t border-slate-700">
-        <h2 class="text-lg font-semibold text-slate-300 mb-4">Recently Played Videos</h2>
-        <div id="recentlyPlayedContainer" class="bg-slate-800 p-4 rounded-xl border border-slate-700">
-            <div id="recentlyPlayedEmpty" class="text-slate-400 text-center py-4">No recently played videos</div>
-            <div id="recentlyPlayedList" class="grid grid-cols-1 md:grid-cols-2 gap-3" style="display:none;"></div>
         </div>
     </div>
 
