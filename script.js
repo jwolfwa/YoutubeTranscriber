@@ -44,6 +44,24 @@ function extractVideoId(url) {
     return (match && match[2].length === 11) ? match[2] : null;
 }
 
+function skipTime(seconds) {
+    if (!player) return;
+    const currentTime = player.getCurrentTime();
+    player.seekTo(currentTime + seconds);
+}
+
+function togglePlayPause() {
+    if (!player) return;
+    const btn = document.getElementById('playPauseBtn');
+    if (player.getPlayerState() === 1) { // Playing
+        player.pauseVideo();
+        btn.innerText = '⏸';
+    } else {
+        player.playVideo();
+        btn.innerText = '▶';
+    }
+}
+
 // --- Breakpoints functions ---
 function addBreakpoint() {
     const time = (player && player.getCurrentTime) ? player.getCurrentTime() : 0;
