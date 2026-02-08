@@ -1,170 +1,214 @@
 let player;
 let loopEnabled = false;
+let startTime = 0;
+let endTime = 0;
 let loopInterval;
-let currentVideoId = null;
+// Unlimited breakpoints storage
+let breakpoints = [];
+let bpIdCounter = 1;
 
-let breakpoints = {
-    A: null,
-    B: null,
-    custom: []
-};
-
-// =====================
-// YouTube
-// =====================
+// Initialize YouTube Player
 function onYouTubeIframeAPIReady() {
     player = new YT.Player('player', {
-        videoId: '3vK19vG9u00',
-        playerVars: { playsinline: 1, rel: 0 },
-        events: { onReady: () => {} }
+        height: '100%',
+        width: '100%',
+        videoId: '3vK19vG9u00', // Default jazz track (Miles Davis)
+        playerVars: {
+            'playsinline': 1,
+            'modestbranding': 1,
+            'rel': 0
+        },
+        events: {
+            'onReady': onPlayerReady
+        }
     });
+}
+
+function onPlayerReady(event) {
+    console.log("Player Ready");
+    renderBreakpoints();
 }
 
 function loadVideo() {
     const url = document.getElementById('videoUrl').value;
-    const id = extractVideoId(url);
-    if (!id) return;
-
-    currentVideoId = id;
-    player.loadVideoById(id);
-    loadState();
-    renderBreakpoints();
-}
-
-// =====================
-// A / B
-// =====================
-function setAB(label) {
-    breakpoints[label] = player.getCurrentTime();
-    updateABDisplays();
-    saveState();
-}
-
-function jumpToAB(label) {
-    if (breakpoints[label] != null) {
-        player.seekTo(breakpoints[label]);
+    const videoId = extractVideoId(url);
+    if (videoId) {
+        player.loadVideoById(videoId);
+        resetMarkers();
     }
 }
 
-function clearAB(label) {
-    breakpoints[label] = null;
-    updateABDisplays();
-    saveState();
+function extractVideoId(url) {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
 }
 
-function updateABDisplays() {
-    document.getElementById('startDisplay').innerText =
-        breakpoints.A != null ? formatTime(breakpoints.A) : '0:00';
-    document.getElementById('endDisplay').innerText =
-        breakpoints.B != null ? formatTime(breakpoints.B) : '0:00';
+// --- Breakpoints functions ---
+function addBreakpoint() {
+    const nameEl = document.getElementById('newBpName');
+    const name = nameEl ? nameEl.value.trim() : '';
+    const time = (player && player.getCurrentTime) ? player.getCurrentTime() : 0;
+    const id = 'bp_' + bpIdCounter++;
+    breakpoints.push({ id, name: name || `BP ${bpIdCounter-1}`, time });
+    if (nameEl) nameEl.value = '';
+    renderBreakpoints();
 }
 
-// =====================
-// Loop
-// =====================
+function renderBreakpoints() {
+    const container = document.getElementById('breakpointsList');
+    if (!container) return;
+    container.innerHTML = '';
+    breakpoints.forEach(bp => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'flex items-center justify-between bg-slate-700 p-2 rounded-lg';
+
+        const left = document.createElement('div');
+        left.className = 'font-mono text-sm';
+        left.innerText = `${bp.name} — ${formatTime(bp.time)}`;
+
+        const actions = document.createElement('div');
+        actions.className = 'flex gap-2';
+
+        const setBtn = document.createElement('button');
+        setBtn.className = 'px-2 py-1 bg-slate-700 rounded hover:bg-slate-600';
+        setBtn.innerText = 'Set';
+        setBtn.onclick = () => { setBreakpointTime(bp.id); };
+
+        const jumpBtn = document.createElement('button');
+        jumpBtn.className = 'px-2 py-1 bg-slate-700 rounded hover:bg-slate-600';
+        jumpBtn.innerText = 'Jump';
+        jumpBtn.onclick = () => { jumpToBreakpoint(bp.id); };
+
+        const renameBtn = document.createElement('button');
+        renameBtn.className = 'px-2 py-1 bg-slate-700 rounded hover:bg-slate-600';
+        renameBtn.innerText = 'Rename';
+        renameBtn.onclick = () => { renameBreakpoint(bp.id); };
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'px-2 py-1 bg-rose-600 rounded text-white hover:bg-slate-600';
+        delBtn.innerText = 'Delete';
+        delBtn.onclick = () => { deleteBreakpoint(bp.id); };
+
+        actions.appendChild(setBtn);
+        actions.appendChild(jumpBtn);
+        actions.appendChild(renameBtn);
+        actions.appendChild(delBtn);
+
+        wrapper.appendChild(left);
+        wrapper.appendChild(actions);
+        container.appendChild(wrapper);
+    });
+}
+
+function setBreakpointTime(id) {
+    const bp = breakpoints.find(b => b.id === id);
+    if (!bp) return;
+    bp.time = (player && player.getCurrentTime) ? player.getCurrentTime() : 0;
+    renderBreakpoints();
+}
+
+function jumpToBreakpoint(id) {
+    const bp = breakpoints.find(b => b.id === id);
+    if (!bp || !player) return;
+    player.seekTo(bp.time);
+}
+
+function deleteBreakpoint(id) {
+    breakpoints = breakpoints.filter(b => b.id !== id);
+    renderBreakpoints();
+}
+
+function renameBreakpoint(id) {
+    const bp = breakpoints.find(b => b.id === id);
+    if (!bp) return;
+    const newName = prompt('Rename breakpoint', bp.name);
+    if (newName === null) return;
+    bp.name = newName.trim() || bp.name;
+    renderBreakpoints();
+}
+
+// --- A/B helpers (always present) ---
+function setStart() {
+    startTime = player.getCurrentTime();
+    document.getElementById('startDisplay').innerText = formatTime(startTime);
+}
+
+function setEnd() {
+    endTime = player.getCurrentTime();
+    document.getElementById('endDisplay').innerText = formatTime(endTime);
+}
+
+function jumpA() {
+    if (!player) return;
+    player.seekTo(startTime || 0);
+}
+
+function jumpB() {
+    if (!player) return;
+    player.seekTo(endTime || 0);
+}
+
+function clearA() {
+    startTime = 0;
+    document.getElementById('startDisplay').innerText = formatTime(startTime);
+}
+
+function clearB() {
+    endTime = 0;
+    document.getElementById('endDisplay').innerText = formatTime(endTime);
+}
+
 function toggleLoop() {
     loopEnabled = !loopEnabled;
     const btn = document.getElementById('loopToggle');
-
+    
     if (loopEnabled) {
-        btn.innerText = 'LOOP ACTIVE';
+        btn.innerText = "LOOP ACTIVE";
         btn.classList.add('bg-emerald-500', 'text-white');
-        startLoop();
+        startLoopCheck();
     } else {
-        btn.innerText = 'ENABLE LOOP';
+        btn.innerText = "ENABLE LOOP";
         btn.classList.remove('bg-emerald-500', 'text-white');
         clearInterval(loopInterval);
     }
 }
 
-function startLoop() {
+function startLoopCheck() {
     clearInterval(loopInterval);
     loopInterval = setInterval(() => {
-        if (!loopEnabled || breakpoints.A == null || breakpoints.B == null) return;
-
-        const t = player.getCurrentTime();
-        if (t >= breakpoints.B || t < breakpoints.A) {
-            player.seekTo(breakpoints.A);
+        if (loopEnabled && endTime > startTime) {
+            let currentTime = player.getCurrentTime();
+            if (currentTime >= endTime || currentTime < startTime) {
+                player.seekTo(startTime);
+            }
         }
     }, 100);
 }
 
-// =====================
-// Custom Breakpoints
-// =====================
-function addBreakpoint() {
-    const bp = {
-        id: crypto.randomUUID(),
-        time: player.getCurrentTime(),
-        name: 'New Breakpoint'
-    };
-    breakpoints.custom.push(bp);
-    saveState();
-    renderBreakpoints();
-}
-
-function jumpToCustom(id) {
-    const bp = breakpoints.custom.find(b => b.id === id);
-    if (bp) player.seekTo(bp.time);
-}
-
-function renameBreakpoint(id, input) {
-    const bp = breakpoints.custom.find(b => b.id === id);
-    if (bp) {
-        bp.name = input.value;
-        saveState();
-    }
-}
-
-function renderBreakpoints() {
-    const list = document.getElementById('breakpointList');
-    list.innerHTML = '';
-
-    breakpoints.custom.forEach(bp => {
-        const row = document.createElement('div');
-        row.className = 'flex items-center gap-2 bg-slate-700 p-2 rounded-lg';
-
-        row.innerHTML = `
-            <input class="flex-1 bg-slate-800 px-2 py-1 rounded"
-                   value="${bp.name}"
-                   onchange="renameBreakpoint('${bp.id}', this)">
-            <div class="font-mono text-sm">${formatTime(bp.time)}</div>
-            <button class="bg-slate-600 px-3 py-1 rounded"
-                    onclick="jumpToCustom('${bp.id}')">Jump</button>
-        `;
-        list.appendChild(row);
+function setSpeed(rate) {
+    if (!player || !player.setPlaybackRate) return;
+    player.setPlaybackRate(rate);
+    // Visual feedback for buttons
+    document.querySelectorAll('.speed-btn').forEach(btn => {
+        btn.classList.remove('bg-emerald-600', 'font-bold');
+        btn.classList.add('bg-slate-700');
+        if(parseFloat(btn.innerText) === rate || (rate === 1 && btn.innerText === 'Normal')) {
+            btn.classList.add('bg-emerald-600', 'font-bold');
+            btn.classList.remove('bg-slate-700');
+        }
     });
 }
 
-// =====================
-// Persistence (cookies)
-// =====================
-function saveState() {
-    if (!currentVideoId) return;
-    document.cookie = `jazzTranscriber::${currentVideoId}=${encodeURIComponent(JSON.stringify(breakpoints))};path=/;max-age=31536000`;
+function formatTime(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
-function loadState() {
-    const key = `jazzTranscriber::${currentVideoId}=`;
-    const cookie = document.cookie.split('; ').find(c => c.startsWith(key));
-    if (cookie) {
-        breakpoints = JSON.parse(decodeURIComponent(cookie.split('=')[1]));
-    } else {
-        breakpoints = { A: null, B: null, custom: [] };
-    }
-    updateABDisplays();
-}
-
-// =====================
-// Utils
-// =====================
-function extractVideoId(url) {
-    const m = url.match(/(?:v=|youtu\.be\/)([\w-]{11})/);
-    return m ? m[1] : null;
-}
-
-function formatTime(s) {
-    const m = Math.floor(s / 60);
-    const sec = Math.floor(s % 60);
-    return `${m}:${sec.toString().padStart(2, '0')}`;
+function resetMarkers() {
+    startTime = 0;
+    endTime = 0;
+    document.getElementById('startDisplay').innerText = "0:00";
+    document.getElementById('endDisplay').innerText = "0:00";
 }
