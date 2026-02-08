@@ -26,17 +26,10 @@ function onYouTubeIframeAPIReady() {
 
 function onPlayerReady(event) {
     console.log("Player Ready");
-    // Enable the load video button now that player is ready
-    const loadBtn = document.querySelector('[onclick="loadVideo()"]');
-    if (loadBtn) loadBtn.disabled = false;
     renderBreakpoints();
 }
 
 function loadVideo() {
-    if (!player) {
-        alert('Player is still loading. Please wait a moment and try again.');
-        return;
-    }
     const url = document.getElementById('videoUrl').value;
     const videoId = extractVideoId(url);
     if (videoId) {
@@ -44,6 +37,7 @@ function loadVideo() {
         resetMarkers();
     }
 }
+
 function extractVideoId(url) {
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
     const match = url.match(regExp);
