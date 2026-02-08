@@ -149,7 +149,20 @@ function updateVideoDropdown() {
     ids.forEach(videoId => {
         const btn = document.createElement('button');
         btn.className = 'bg-slate-700 hover:bg-slate-600 p-3 rounded-lg text-left';
-        btn.innerHTML = `<div class="font-mono text-sm text-emerald-400">${videoId}</div><div class="text-slate-300 truncate">${savedVideos[videoId].title || 'Untitled'}</div>`;\n        btn.onclick = () => {\n            currentVideoId = videoId;\n            player.loadVideoById(videoId);\n            document.getElementById('videoUrl').value = 'https://www.youtube.com/watch?v=' + videoId;\n            resetMarkers();\n            const saved = savedVideos[videoId];\n            breakpoints = saved.breakpoints.map(bp => ({ ...bp }));\n            bpIdCounter = Math.max(...breakpoints.map(bp => parseInt(bp.id.split('_')[1]) || 0)) + 1;\n            renderBreakpoints();\n        };\n        list.appendChild(btn);\n    });\n}
+        btn.innerHTML = `<div class="font-mono text-sm text-emerald-400">${videoId}</div><div class="text-slate-300 truncate">${savedVideos[videoId].title || 'Untitled'}</div>`;
+        btn.onclick = () => {
+            currentVideoId = videoId;
+            player.loadVideoById(videoId);
+            document.getElementById('videoUrl').value = 'https://www.youtube.com/watch?v=' + videoId;
+            resetMarkers();
+            const saved = savedVideos[videoId];
+            breakpoints = saved.breakpoints.map(bp => ({ ...bp }));
+            bpIdCounter = Math.max(...breakpoints.map(bp => parseInt(bp.id.split('_')[1]) || 0)) + 1;
+            renderBreakpoints();
+        };
+        list.appendChild(btn);
+    });
+}
 
 function renderBreakpoints() {
     const container = document.getElementById('breakpointsList');
