@@ -20,17 +20,11 @@
             <div id="player"></div>
         </div>
 
-        <div class="flex flex-col gap-2">
-            <div class="flex gap-2">
-                <input type="text" id="videoUrl" placeholder="Paste YouTube Link..." 
-                    class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                <button onclick="loadVideo()" class="bg-emerald-600 hover:bg-slate-600 px-6 py-2 rounded-lg font-bold transition">Load</button>
-            </div>
-            <div id="savedVideosDropdown" style="display:none;">
-                <select id="videoSelect" onchange="loadSavedVideo()" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                    <option value="">-- Saved Videos --</option>
-                </select>
-            </div>
+        <div class="flex gap-2">
+            <input type="text" id="videoUrl" placeholder="Paste YouTube Link..." 
+                class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                onkeypress="if(event.key==='Enter') loadVideo()">
+            <button onclick="loadVideo()" class="bg-emerald-600 hover:bg-slate-600 px-6 py-2 rounded-lg font-bold transition">Load</button>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -82,6 +76,14 @@
                 </div>
             </div>
 
+        </div>
+    </div>
+
+    <div class="max-w-4xl mx-auto mt-8 pt-6 border-t border-slate-700">
+        <h2 class="text-lg font-semibold text-slate-300 mb-4">Recently Played Videos</h2>
+        <div id="recentlyPlayedContainer" class="bg-slate-800 p-4 rounded-xl border border-slate-700">
+            <div id="recentlyPlayedEmpty" class="text-slate-400 text-center py-4">No recently played videos</div>
+            <div id="recentlyPlayedList" class="grid grid-cols-1 md:grid-cols-2 gap-3" style="display:none;"></div>
         </div>
     </div>
 

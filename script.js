@@ -132,28 +132,24 @@ function saveSavedVideosToCookies() {
 }
 
 function updateVideoDropdown() {
-    const select = document.getElementById('videoSelect');
-    const dropdown = document.getElementById('savedVideosDropdown');
+    const list = document.getElementById('recentlyPlayedList');
+    const empty = document.getElementById('recentlyPlayedEmpty');
     const ids = Object.keys(savedVideos);
     
     if (ids.length === 0) {
-        dropdown.style.display = 'none';
+        list.style.display = 'none';
+        empty.style.display = 'block';
         return;
     }
     
-    dropdown.style.display = 'block';
-    const currentValue = select.value;
-    select.innerHTML = '<option value="">-- Saved Videos --</option>';
+    list.style.display = 'grid';
+    empty.style.display = 'none';
+    list.innerHTML = '';
     
     ids.forEach(videoId => {
-        const option = document.createElement('option');
-        option.value = videoId;
-        option.innerText = savedVideos[videoId].title || videoId;
-        select.appendChild(option);
-    });
-    
-    select.value = currentValue;
-}
+        const btn = document.createElement('button');
+        btn.className = 'bg-slate-700 hover:bg-slate-600 p-3 rounded-lg text-left';
+        btn.innerHTML = `<div class="font-mono text-sm text-emerald-400">${videoId}</div><div class="text-slate-300 truncate">${savedVideos[videoId].title || 'Untitled'}</div>`;\n        btn.onclick = () => {\n            currentVideoId = videoId;\n            player.loadVideoById(videoId);\n            document.getElementById('videoUrl').value = 'https://www.youtube.com/watch?v=' + videoId;\n            resetMarkers();\n            const saved = savedVideos[videoId];\n            breakpoints = saved.breakpoints.map(bp => ({ ...bp }));\n            bpIdCounter = Math.max(...breakpoints.map(bp => parseInt(bp.id.split('_')[1]) || 0)) + 1;\n            renderBreakpoints();\n        };\n        list.appendChild(btn);\n    });\n}
 
 function renderBreakpoints() {
     const container = document.getElementById('breakpointsList');
