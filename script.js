@@ -7,6 +7,15 @@ let loopInterval;
 let breakpoints = [];
 let bpIdCounter = 1;
 
+function getNextBreakpointNumber() {
+    const usedNumbers = new Set(breakpoints.map(bp => bp.number));
+    let number = 1;
+    while (usedNumbers.has(number)) {
+        number++;
+    }
+    return number;
+}
+
 // Initialize YouTube Player
 function onYouTubeIframeAPIReady() {
     player = new YT.Player('player', {
@@ -65,8 +74,9 @@ function togglePlayPause() {
 // --- Breakpoints functions ---
 function addBreakpoint() {
     const time = (player && player.getCurrentTime) ? player.getCurrentTime() : 0;
+    const number = getNextBreakpointNumber();
     const id = 'bp_' + bpIdCounter++;
-    breakpoints.push({ id, name: `BP ${bpIdCounter-1}`, time });
+    breakpoints.push({ id, number, name: `BP ${number}`, time });
     renderBreakpoints();
 }
 
@@ -114,6 +124,12 @@ function renderBreakpoints() {
         wrapper.appendChild(actions);
         container.appendChild(wrapper);
     });
+
+    if (container.lastElementChild) {
+        container.lastElementChild.scrollIntoView({ behavior: 'auto', block: 'end' });
+    } else {
+        container.scrollTop = container.scrollHeight;
+    }
 }
 
 function setBreakpointTime(id) {
