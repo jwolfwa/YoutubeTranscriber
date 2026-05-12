@@ -53,6 +53,130 @@ function extractVideoId(url) {
     return (match && match[2].length === 11) ? match[2] : null;
 }
 
+function base64EncodeUnicode(str) {
+    const bytes = new TextEncoder().encode(str);
+    let binary = '';
+    bytes.forEach(b => binary += String.fromCharCode(b));
+    return btoa(binary);
+}
+
+function base64DecodeUnicode(str) {
+    const binary = atob(str);
+    const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
+    return new TextDecoder().decode(bytes);
+}
+
+function generateEncoding() {
+    const videoUrlInput = document.getElementById('videoUrl');
+    const videoUrl = videoUrlInput ? videoUrlInput.value.trim() || (player && player.getVideoUrl ? player.getVideoUrl() : '') : '';
+    const state = {
+        version: 1,
+        videoUrl,
+        startTime,
+        endTime,
+        breakpoints: breakpoints.map(bp => ({ number: bp.number, name: bp.name, time: bp.time }))
+    };
+
+    const payload = JSON.stringify(state);
+    const encoded = base64EncodeUnicode(payload);
+    return `ytt:${encoded}`;
+}
+
+function decode(encodedString) {
+    if (typeof encodedString !== 'string') {
+        alert('Invalid state string');
+        return;
+    }
+
+    if (encodedString.startsWith('ytt:')) {
+        encodedString = encodedString.slice(4);
+    }
+
+    let decoded;
+    try {
+        decoded = base64DecodeUnicode(encodedString);
+    } catch (error) {
+        alert('Failed to decode state string.');
+        return;
+    }
+
+    let state;
+    try {
+        state = JSON.parse(decoded);
+    } catch (error) {
+        alert('Invalid state file format.');
+        return;
+    }
+
+    if (state.videoUrl) {
+        const videoUrlInput = document.getElementById('videoUrl');
+        if (videoUrlInput) {
+            videoUrlInput.value = state.videoUrl;
+        }
+        loadVideo();
+    }
+
+    breakpoints = [];
+    bpIdCounter = 1;
+    if (Array.isArray(state.breakpoints)) {
+        state.breakpoints.forEach(bp => {
+            const id = 'bp_' + bpIdCounter++;
+            const number = typeof bp.number === 'number' ? bp.number : getNextBreakpointNumber();
+            breakpoints.push({
+                id,
+                number,
+                name: bp.name || `BP ${number}`,
+                time: typeof bp.time === 'number' ? bp.time : 0
+            });
+        });
+    }
+
+    if (breakpoints.length > 0) {
+        const maxNumber = Math.max(...breakpoints.map(bp => bp.number));
+        bpIdCounter = Math.max(bpIdCounter, maxNumber + 1);
+    }
+
+    startTime = typeof state.startTime === 'number' ? state.startTime : 0;
+    endTime = typeof state.endTime === 'number' ? state.endTime : 0;
+    document.getElementById('startDisplay').innerText = formatTime(startTime);
+    document.getElementById('endDisplay').innerText = formatTime(endTime);
+    renderBreakpoints();
+}
+
+function promptLoadState() {
+    const input = document.getElementById('stateFileInput');
+    if (!input) return;
+    input.value = '';
+    input.click();
+}
+
+function handleStateFileSelected(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+        decode(reader.result);
+    };
+    reader.readAsText(file);
+}
+
+function saveStateToFile() {
+    const encoded = generateEncoding();
+    const defaultName = 'session.ytt';
+    const fileName = prompt('Save state as', defaultName);
+    if (!fileName) return;
+
+    const blob = new Blob([encoded], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = fileName.endsWith('.ytt') ? fileName : `${fileName}.ytt`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+    URL.revokeObjectURL(url);
+}
+
 function skipTime(seconds) {
     if (!player) return;
     const currentTime = player.getCurrentTime();
