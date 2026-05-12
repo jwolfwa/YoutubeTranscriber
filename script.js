@@ -45,15 +45,23 @@ function onPlayerReady(event) {
 
 function showPlayerPlaceholder() {
     const placeholder = document.getElementById('playerPlaceholder');
+    const playerDiv = document.getElementById('player');
     if (placeholder) {
         placeholder.style.display = 'flex';
+    }
+    if (playerDiv) {
+        playerDiv.style.visibility = 'hidden';
     }
 }
 
 function hidePlayerPlaceholder() {
     const placeholder = document.getElementById('playerPlaceholder');
+    const playerDiv = document.getElementById('player');
     if (placeholder) {
         placeholder.style.display = 'none';
+    }
+    if (playerDiv) {
+        playerDiv.style.visibility = 'visible';
     }
 }
 
