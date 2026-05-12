@@ -21,7 +21,6 @@ function onYouTubeIframeAPIReady() {
     player = new YT.Player('player', {
         height: '100%',
         width: '100%',
-        videoId: '3vK19vG9u00', // Default jazz track (Miles Davis)
         playerVars: {
             'playsinline': 1,
             'modestbranding': 1,
@@ -36,6 +35,26 @@ function onYouTubeIframeAPIReady() {
 function onPlayerReady(event) {
     console.log("Player Ready");
     renderBreakpoints();
+    const url = document.getElementById('videoUrl').value.trim();
+    if (url) {
+        hidePlayerPlaceholder();
+    } else {
+        showPlayerPlaceholder();
+    }
+}
+
+function showPlayerPlaceholder() {
+    const placeholder = document.getElementById('playerPlaceholder');
+    if (placeholder) {
+        placeholder.style.display = 'flex';
+    }
+}
+
+function hidePlayerPlaceholder() {
+    const placeholder = document.getElementById('playerPlaceholder');
+    if (placeholder) {
+        placeholder.style.display = 'none';
+    }
 }
 
 function loadVideo() {
@@ -43,7 +62,11 @@ function loadVideo() {
     const videoId = extractVideoId(url);
     if (videoId) {
         player.loadVideoById(videoId);
+        hidePlayerPlaceholder();
         resetMarkers();
+    } else {
+        alert('Please enter a valid YouTube link.');
+        showPlayerPlaceholder();
     }
 }
 

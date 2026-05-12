@@ -18,7 +18,15 @@
         </header>
 
         <div class="aspect-video w-full bg-black rounded-xl overflow-hidden shadow-2xl border border-slate-700">
-            <div id="player"></div>
+            <div id="playerWrapper" class="relative h-full w-full">
+                <div id="player" class="h-full w-full"></div>
+                <div id="playerPlaceholder" class="absolute inset-0 flex items-center justify-center text-center px-6 bg-slate-950/80 text-slate-400">
+                    <div>
+                        <div class="text-2xl font-semibold">Enter a link to get started</div>
+                        <div class="mt-2 text-sm text-slate-500">Paste a YouTube URL and click Go!</div>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="flex gap-2">
