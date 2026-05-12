@@ -36,32 +36,28 @@ function onPlayerReady(event) {
     console.log("Player Ready");
     renderBreakpoints();
     const url = document.getElementById('videoUrl').value.trim();
-    if (url) {
-        hidePlayerPlaceholder();
+    if (!url) {
+        hidePlayer();
     } else {
-        showPlayerPlaceholder();
+        showPlayer();
     }
 }
 
-function showPlayerPlaceholder() {
+function showPlayer() {
+    const player = document.getElementById('player');
     const placeholder = document.getElementById('playerPlaceholder');
-    const playerDiv = document.getElementById('player');
-    if (placeholder) {
-        placeholder.style.display = 'flex';
-    }
-    if (playerDiv) {
-        playerDiv.style.visibility = 'hidden';
-    }
-}
-
-function hidePlayerPlaceholder() {
-    const placeholder = document.getElementById('playerPlaceholder');
-    const playerDiv = document.getElementById('player');
-    if (placeholder) {
+    if (player) {
+        player.style.display = 'block';
         placeholder.style.display = 'none';
     }
-    if (playerDiv) {
-        playerDiv.style.visibility = 'visible';
+}
+
+function hidePlayer() {
+    const player = document.getElementById('player');
+    const placeholder = document.getElementById('playerPlaceholder');
+    if (player) {
+        player.style.display = 'none';
+        placeholder.style.display = 'flex';
     }
 }
 
@@ -70,11 +66,11 @@ function loadVideo() {
     const videoId = extractVideoId(url);
     if (videoId) {
         player.loadVideoById(videoId);
-        hidePlayerPlaceholder();
+        showPlayer();
         resetMarkers();
     } else {
         alert('Please enter a valid YouTube link.');
-        showPlayerPlaceholder();
+        hidePlayer();
     }
 }
 
